@@ -1,4 +1,4 @@
-# --- Server & Hybrid Bridge ---
+# --- Base Server & Hybrid Bridge ---
 fastapi
 uvicorn[standard]
 websockets
@@ -7,8 +7,9 @@ python-dotenv
 gunicorn
 a2wsgi
 
-# --- AI & Voice (S2ST/TTS) ---
+# --- AI & Voice (S2ST & Standard Gemini) ---
 google-genai
+google-generativeai
 google-cloud-texttospeech
 google-auth
 
