@@ -32,7 +32,7 @@
             margin-top: 10px;
         }
     </style>
-    <!-- S2ST(WebSocket)通信用のユーザー情報 -->
+    <!-- S2ST通信用のメタタグ -->
     <meta name="app-username" content="{{ session.get('username', 'guest') }}">
     <meta name="app-session-id" content="{{ session.get('session_id', '') }}">
 </head>
@@ -112,9 +112,8 @@
                 <button class="back-button" id="backFromPlayer">← Back</button>
             </div>
             <div class="player-container">
-                <img src="/static/images/default_avatar.png" id="playerAvatar" class="player-avatar" alt="Avatar">
+                <img src="/static/images/default_avatar2.jpg" id="playerAvatar" class="player-avatar" alt="Avatar">
                 
-                <!-- 波形アニメーション -->
                 <div class="visualizer-container">
                     <div class="viz-dot" style="--i:4"></div>
                     <div class="viz-dot" style="--i:3"></div>
@@ -127,7 +126,6 @@
                     <div class="viz-dot" style="--i:4"></div>
                 </div>
 
-                <!-- 字幕エリア -->
                 <div class="subtitle-container">
                     <p id="subtitleText" class="subtitle-text">...</p>
                 </div>
@@ -135,7 +133,6 @@
                 <div class="player-title" id="playerTitle">タイトル</div>
                 <div class="player-subtitle">AI Lecturer</div>
                 
-                <!-- プレイヤー操作パネル -->
                 <div class="seminar-player-controls">
                     <div class="chat-audio-controls">
                         <div class="chat-control-left">
@@ -182,7 +179,7 @@
                 <audio id="material-audio" controls style="width: 100%; margin-top: 30px;"></audio>
             </div>
         </div>
-    </div>
+    </div> <!-- END of launcherWrapper -->
 
     <!-- テーマ設定モーダル -->
     <div class="modal" id="settingsModal">
@@ -237,7 +234,6 @@
             </header>
 
             <div class="s2st-main-area">
-                <!-- オーブ (アニメーション) -->
                 <div class="orb-wrap">
                     <div class="orb-ring"></div><div class="orb-ring"></div>
                     <div class="orb" id="orb">
@@ -252,7 +248,6 @@
                 
                 <div class="s2st-status" id="s2stStatus">待機中</div>
 
-                <!-- 声色の切り替えドロップダウン -->
                 <div style="margin-bottom: 25px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-microphone-alt" style="color: #ffffff; opacity: 0.8;"></i>
                     <select id="voiceSelect" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 8px 12px; font-size: 14px; outline: none; cursor: pointer; backdrop-filter: blur(5px);">
@@ -268,10 +263,8 @@
                 <button class="s2st-btn" id="s2stStartBtn">会話を開始</button>
             </div>
 
-            <!-- 字幕エリア -->
             <div class="s2st-transcript" id="s2stTranscript"></div>
 
-            <!-- 音声処理用 Worklet (CORS対策でHTML内に直書き) -->
             <script id="worklet-src" type="text/worklet">
             class PCMProcessor extends AudioWorkletProcessor {
               process(inputs) {
@@ -289,7 +282,7 @@
         </div>
     </div>
 
-    <!-- 音声再生用要素 -->
+    <!-- 音声再生用のオーディオタグ (必須) -->
     <audio id="audio-player" style="display: none;"></audio>
     <audio id="seminar-audio" style="display: none;"></audio>
 
@@ -298,15 +291,12 @@
         <div class="offline-content">
             <i class="fas fa-wifi offline-icon"></i>
             <div class="offline-title">オフラインです</div>
-            <p class="offline-text">
-                インターネットに接続されていません。<br>
-                電波の良い場所で再度お試しください。
-            </p>
+            <p class="offline-text">インターネットに接続されていません。</p>
             <button class="offline-retry-btn" onclick="window.location.reload()">再読み込み</button>
         </div>
     </div>
 
-    <!-- メインスクリプト -->
+    <!-- メインスクリプト (最下部に配置) -->
     <script src="/static/script.js"></script>
 
     <!-- 履歴表示用モーダル -->
@@ -315,23 +305,14 @@
             <div style="padding: 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h2 class="modal-title" style="margin: 0;">これまでの履歴</h2>
-                    <p class="modal-subtitle" style="margin-bottom: 0;">直近のやり取りを表示します</p>
                 </div>
-                <!-- クリアボタン -->
-                <button id="clearHistoryBtn" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:0.9em;">
-                    <i class="fas fa-trash-alt"></i> 履歴消去
-                </button>
+                <button id="clearHistoryBtn" style="background:none; border:none; color:#e74c3c; cursor:pointer;"><i class="fas fa-trash-alt"></i> 消去</button>
             </div>
-            
-            <div id="historyList" style="flex: 1; overflow-y: auto; padding: 20px; text-align: left;">
-                <p style="text-align:center; color:#888;">読み込み中...</p>
-            </div>
-            
+            <div id="historyList" style="flex: 1; overflow-y: auto; padding: 20px;"></div>
             <div style="padding: 20px; border-top: 1px solid #ddd;">
-                <button class="modal-button" id="closeHistoryButton" style="margin-bottom: 0;">閉じる</button>
+                <button class="modal-button" id="closeHistoryButton">閉じる</button>
             </div>
         </div>
     </div>
-
 </body>
 </html>

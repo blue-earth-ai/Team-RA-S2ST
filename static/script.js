@@ -3,7 +3,7 @@
 // ========================================
 let allKnowledgeData = [];
 let allSeminarData = [];
-let subtitleData = [];
+let subtitleData = []; // 字幕データ保持用
 let currentNaturalBg = '01';
 
 // ========================================
@@ -31,8 +31,15 @@ function getSmartPdfUrl(url) {
     return url;
 }
 
+function formatTime(seconds) {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+}
+
 // ========================================
-// 画面遷移管理 (安全版)
+// 画面遷移管理
 // ========================================
 const screens = { 
     launcher: document.getElementById('launcherScreen'), 
@@ -45,7 +52,6 @@ const launcherWrapper = document.getElementById('launcherWrapper');
 const chatContainer = document.getElementById('chatContainer');
 
 function navigateTo(target) {
-    console.log("Navigating to:", target);
     if(launcherWrapper) launcherWrapper.style.display = 'block';
     if(chatContainer) chatContainer.style.display = 'none';
     
@@ -55,33 +61,28 @@ function navigateTo(target) {
     
     if(screens[target]) {
         screens[target].style.display = 'flex';
-    } else {
-        console.warn("Target screen not found:", target);
     }
 }
 
 // ========================================
 // ボタンイベント
 // ========================================
-const goToChatButton = document.getElementById('goToChatButton');
-if (goToChatButton) {
-    goToChatButton.addEventListener('click', () => {
+if (document.getElementById('goToChatButton')) {
+    document.getElementById('goToChatButton').addEventListener('click', () => {
         if(launcherWrapper) launcherWrapper.style.display = 'none';
         if(chatContainer) chatContainer.style.display = 'flex';
     });
 }
 
-const goToSearchButton = document.getElementById('goToSearchButton');
-if(goToSearchButton) {
-    goToSearchButton.addEventListener('click', () => {
+if(document.getElementById('goToSearchButton')) {
+    document.getElementById('goToSearchButton').addEventListener('click', () => {
         navigateTo('search');
         fetchKnowledgeData();
     });
 }
 
-const goToSeminarButton = document.getElementById('goToSeminarButton');
-if(goToSeminarButton) {
-    goToSeminarButton.addEventListener('click', () => {
+if(document.getElementById('goToSeminarButton')) {
+    document.getElementById('goToSeminarButton').addEventListener('click', () => {
         navigateTo('seminarSelect');
         fetchSeminarList();
     });
@@ -96,27 +97,24 @@ for (const [id, target] of Object.entries(backBtns)) {
     if(btn) btn.addEventListener('click', () => navigateTo(target));
 }
 
-const backFromPlayer = document.getElementById('backFromPlayer');
-if(backFromPlayer) {
-    backFromPlayer.addEventListener('click', () => {
+if(document.getElementById('backFromPlayer')) {
+    document.getElementById('backFromPlayer').addEventListener('click', () => {
         const seminarAudio = document.getElementById('seminar-audio');
         if(seminarAudio) seminarAudio.pause();
         navigateTo('seminarSelect');
     });
 }
 
-const backFromMaterialPlayer = document.getElementById('backFromMaterialPlayer');
-if(backFromMaterialPlayer) {
-    backFromMaterialPlayer.addEventListener('click', () => {
+if(document.getElementById('backFromMaterialPlayer')) {
+    document.getElementById('backFromMaterialPlayer').addEventListener('click', () => {
         const materialAudio = document.getElementById('material-audio');
         if(materialAudio) materialAudio.pause();
         navigateTo('search');
     });
 }
 
-const backToLauncherButton = document.getElementById('backToLauncherButton');
-if(backToLauncherButton) {
-    backToLauncherButton.addEventListener('click', async () => {
+if(document.getElementById('backToLauncherButton')) {
+    document.getElementById('backToLauncherButton').addEventListener('click', () => {
         if (typeof stopS2st === 'function') stopS2st();
         navigateTo('launcher');
     });
@@ -126,11 +124,7 @@ if(backToLauncherButton) {
 // テーマ設定
 // ========================================
 const body = document.body;
-const settingsButton = document.getElementById('settingsButton');
-const settingsModal = document.getElementById('settingsModal');
 const themePreviews = document.querySelectorAll('.theme-preview');
-const setLightThemeBtn = document.getElementById('setLightTheme');
-const userLogoutBtn = document.getElementById('userLogoutBtn');
 
 function applyTheme(themeName) {
     body.className = '';
@@ -140,28 +134,14 @@ function applyTheme(themeName) {
     } else {
         body.style.backgroundImage = '';
     }
-    updateSelectedPreview();
     localStorage.setItem('appTheme', themeName);
     localStorage.setItem('appBgId', currentNaturalBg);
 }
 
-function updateSelectedPreview() {
-    const isImageTheme = body.classList.contains('natural-theme') || body.classList.contains('gold-theme');
-    themePreviews.forEach(p => {
-        p.classList.toggle('selected', p.dataset.bg === currentNaturalBg && isImageTheme);
-    });
-}
-
-if(settingsButton) {
-    settingsButton.addEventListener('click', () => {
-        updateSelectedPreview();
-        if(settingsModal) settingsModal.style.display = 'flex';
-    });
-}
-
-if(settingsModal) {
-    settingsModal.addEventListener('click', e => {
-        if (e.target === settingsModal) settingsModal.style.display = 'none';
+if(document.getElementById('settingsButton')) {
+    document.getElementById('settingsButton').addEventListener('click', () => {
+        const modal = document.getElementById('settingsModal');
+        if(modal) modal.style.display = 'flex';
     });
 }
 
@@ -171,29 +151,21 @@ themePreviews.forEach(preview => {
         const bgNumber = parseInt(currentNaturalBg, 10);
         if (bgNumber <= 6) applyTheme('gold-theme'); 
         else applyTheme('natural-theme'); 
-        if(settingsModal) settingsModal.style.display = 'none';
+        const modal = document.getElementById('settingsModal');
+        if(modal) modal.style.display = 'none';
     });
 });
 
-if(setLightThemeBtn) {
-    setLightThemeBtn.addEventListener('click', () => {
-        applyTheme('light-theme');
-        if(settingsModal) settingsModal.style.display = 'none';
-    });
-}
-
-if(userLogoutBtn) {
-    userLogoutBtn.addEventListener('click', () => {
+if(document.getElementById('userLogoutBtn')) {
+    document.getElementById('userLogoutBtn').addEventListener('click', () => {
         window.location.href = '/logout';
     });
 }
 
 // ========================================
-// セミナー・資料リスト
+// AIセミナー機能 (リスト表示)
 // ========================================
 const seminarListContainer = document.getElementById('seminarList');
-const seminarAudio = document.getElementById('seminar-audio');
-const seminarSearchInput = document.getElementById('seminarSearchInput');
 
 async function fetchSeminarList() {
     try {
@@ -208,29 +180,45 @@ async function fetchSeminarList() {
 function renderSeminarList(data) {
     if(!seminarListContainer) return;
     if (data.length === 0) {
-        seminarListContainer.innerHTML = '<p class="no-results">該当なし</p>';
+        seminarListContainer.innerHTML = '<p class="no-results">セミナーが見つかりません。</p>';
         return;
     }
-    seminarListContainer.innerHTML = data.map(item => `
-        <div class="knowledge-card">
-            <h3 class="card-topic-title">${item.topic_title}</h3>
-            <button class="card-button play" onclick="startSeminar(${item.id})">
-                <i class="fas fa-play-circle"></i> 受講する
-            </button>
-        </div>
-    `).join('');
+    
+    seminarListContainer.innerHTML = data.map(item => {
+        let textbookInfo = '';
+        if (item.textbook_path) {
+            let displayName = item.seminar_doc_name ? item.seminar_doc_name.replace(/\.pdf$/i, "") : "関連資料";
+            const pageInfo = item.textbook_page ? `（${item.textbook_page}ページ）` : '';
+            const displayText = `対象テキスト：<br>${displayName}${pageInfo}`;
+            let hrefPath = getSmartPdfUrl(item.textbook_path);
+
+            textbookInfo = `
+                <div class="seminar-textbook-info">
+                    <a href="${hrefPath}" target="_blank" class="seminar-textbook-link">
+                        <i class="fas fa-book-open"></i> ${displayText}
+                    </a>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="knowledge-card">
+                <div class="seminar-header">
+                    <h3 class="card-topic-title">${item.topic_title}</h3>
+                    ${textbookInfo}
+                </div>
+                <button class="card-button play" onclick="startSeminar(${item.id})">
+                    <i class="fas fa-play-circle"></i> 受講する
+                </button>
+            </div>
+        `;
+    }).join('');
 }
 
-if(seminarSearchInput) {
-    seminarSearchInput.addEventListener('input', (e) => {
-        const keyword = e.target.value.toLowerCase().trim();
-        const filtered = allSeminarData.filter(i => i.topic_title.toLowerCase().includes(keyword));
-        renderSeminarList(filtered);
-    });
-}
-
+// ========================================
+// 資料検索ロジック
+// ========================================
 const knowledgeListContainer = document.getElementById('knowledgeList');
-const searchInput = document.getElementById('searchInput');
 
 async function fetchKnowledgeData() {
     try {
@@ -238,30 +226,204 @@ async function fetchKnowledgeData() {
         allKnowledgeData = await response.json();
         renderKnowledgeList(allKnowledgeData);
     } catch (error) {
-        if(knowledgeListContainer) knowledgeListContainer.innerHTML = 'エラー';
+        if(knowledgeListContainer) knowledgeListContainer.innerHTML = '読み込みエラー';
     }
 }
 
 function renderKnowledgeList(data) {
     if(!knowledgeListContainer) return;
-    knowledgeListContainer.innerHTML = data.map(item => `
-        <div class="knowledge-card">
-            <h3 class="card-topic-title">${item.topic_title}</h3>
-            <div class="card-links">
-                <button class="card-button video ${item.has_audio?'':'disabled'}" onclick="playMaterialAudio('${getSecureUrl(item.lecture_audio_url)}', '${item.topic_title}')">音声</button>
-                <a href="${getSmartPdfUrl(item.pdf_file_url)}" target="_blank" class="card-button pdf ${item.has_pdf?'':'disabled'}">資料</a>
+    if (data.length === 0) {
+        knowledgeListContainer.innerHTML = '<p class="no-results">該当資料なし</p>';
+        return;
+    }
+    knowledgeListContainer.innerHTML = data.map(item => {
+        const safeAudioUrl = item.lecture_audio_url ? getSecureUrl(item.lecture_audio_url).replace(/'/g, "\\'") : '';
+        const safeTitle = item.topic_title ? item.topic_title.replace(/'/g, "\\'") : '';
+
+        const audioBtn = item.has_audio 
+            ? `<button class="card-button video" onclick="playMaterialAudio('${safeAudioUrl}', '${safeTitle}')"><i class="fas fa-volume-up"></i> 音声</button>`
+            : `<button class="card-button video disabled" disabled><i class="fas fa-volume-up"></i> 音声</button>`;
+        
+        const pdfBtn = item.has_pdf 
+            ? `<a href="${getSmartPdfUrl(item.pdf_file_url)}" target="_blank" class="card-button pdf"><i class="fas fa-file-pdf"></i> 資料</a>`
+            : `<button class="card-button pdf disabled" disabled><i class="fas fa-file-pdf"></i> 資料</button>`;
+        
+        return `
+            <div class="knowledge-card">
+                <h3 class="card-topic-title">${item.topic_title}</h3>
+                <div class="card-links">
+                    ${audioBtn}
+                    ${pdfBtn}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
-if(searchInput) {
-    searchInput.addEventListener('input', (e) => {
-        const keyword = e.target.value.toLowerCase().trim();
-        const filtered = allKnowledgeData.filter(i => i.topic_title.toLowerCase().includes(keyword));
-        renderKnowledgeList(filtered);
+window.playMaterialAudio = (url, title) => {
+    const materialAudio = document.getElementById('material-audio');
+    const playerTitle = document.getElementById('materialPlayerTitle');
+    if (url && materialAudio) {
+        if(playerTitle) playerTitle.innerText = title;
+        materialAudio.src = url;
+        materialAudio.load();
+        navigateTo('materialPlayer');
+        setTimeout(() => { materialAudio.play().catch(()=>{}); }, 150);
+    }
+};
+
+// ========================================
+// AIセミナー再生・字幕・ビジュアライザー (修復版)
+// ========================================
+const seminarAudio = document.getElementById('seminar-audio');
+const subtitleText = document.getElementById('subtitleText');
+const visualizerContainer = document.querySelector('.visualizer-container');
+const seminarPlayPauseBtn = document.getElementById('seminarPlayPauseBtn');
+const seminarProgressFill = document.getElementById('seminarProgressFill');
+const seminarCurrentTime = document.getElementById('seminarCurrentTime');
+const seminarDuration = document.getElementById('seminarDuration');
+
+// 字幕生成ロジック
+function generateSubtitles(fullText, duration) {
+    if (!fullText) return [];
+    // 句読点や改行で分割
+    const rawSentences = fullText.split(/([。！？\n]+)/).filter(Boolean);
+    let sentences = [];
+    for (let i = 0; i < rawSentences.length; i += 2) {
+        let text = rawSentences[i];
+        if (i + 1 < rawSentences.length) text += rawSentences[i + 1];
+        if (text.trim()) sentences.push(text.trim());
+    }
+    const totalLength = sentences.join('').length;
+    let currentTime = 0;
+    const subtitles = [];
+    sentences.forEach(sentence => {
+        const sentenceDuration = (sentence.length / totalLength) * duration;
+        subtitles.push({
+            text: sentence,
+            start: currentTime,
+            end: currentTime + sentenceDuration
+        });
+        currentTime += sentenceDuration;
+    });
+    return subtitles;
+}
+
+// ビジュアライザー制御
+function toggleVisualizer(isPlaying) {
+    if(!visualizerContainer) return;
+    if (isPlaying) visualizerContainer.classList.add('playing');
+    else visualizerContainer.classList.remove('playing');
+}
+
+if(seminarAudio) {
+    // メタデータ読み込み時
+    seminarAudio.addEventListener('loadedmetadata', () => {
+        const text = seminarAudio.dataset.fullText;
+        const duration = seminarAudio.duration;
+        if (text && duration) {
+            subtitleData = generateSubtitles(text, duration);
+            if(subtitleText && subtitleData.length > 0) subtitleText.innerText = subtitleData[0].text;
+        }
+        if(seminarDuration) seminarDuration.innerText = formatTime(duration);
+    });
+
+    // 再生中（時間更新時）
+    seminarAudio.addEventListener('timeupdate', () => {
+        if(seminarAudio.duration) {
+            const current = seminarAudio.currentTime;
+            // 進捗バー更新
+            const percent = (current / seminarAudio.duration) * 100;
+            if(seminarProgressFill) seminarProgressFill.style.width = percent + '%';
+            if(seminarCurrentTime) seminarCurrentTime.innerText = formatTime(current);
+            
+            // 字幕更新 (0.9を掛けて少し早めに出す調整)
+            if (subtitleData.length > 0 && subtitleText) {
+                const currentSubtitle = subtitleData.find(s => current >= s.start && current < s.end);
+                if (currentSubtitle) {
+                    if (subtitleText.innerText !== currentSubtitle.text) subtitleText.innerText = currentSubtitle.text;
+                }
+            }
+        }
+    });
+
+    seminarAudio.addEventListener('play', () => {
+        if(seminarPlayPauseBtn) seminarPlayPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        toggleVisualizer(true);
+    });
+
+    seminarAudio.addEventListener('pause', () => {
+        if(seminarPlayPauseBtn) seminarPlayPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        toggleVisualizer(false);
+    });
+
+    seminarAudio.addEventListener('ended', () => {
+        if(seminarPlayPauseBtn) seminarPlayPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        toggleVisualizer(false);
     });
 }
+
+// 再生・一時停止ボタン
+if(seminarPlayPauseBtn) {
+    seminarPlayPauseBtn.addEventListener('click', () => {
+        if (seminarAudio.paused) seminarAudio.play();
+        else seminarAudio.pause();
+    });
+}
+
+// プログレスバークリックでシーク
+const seminarProgressContainer = document.getElementById('seminarProgressContainer');
+if(seminarProgressContainer) {
+    seminarProgressContainer.addEventListener('click', (e) => {
+        const width = seminarProgressContainer.clientWidth;
+        const clickX = e.offsetX;
+        const duration = seminarAudio.duration;
+        if(seminarAudio && duration) seminarAudio.currentTime = (clickX / width) * duration;
+    });
+}
+
+// 再生速度変更
+document.querySelectorAll('.sem-speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.sem-speed-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if(seminarAudio) seminarAudio.playbackRate = parseFloat(btn.dataset.speed);
+    });
+});
+
+// セミナー開始処理
+window.startSeminar = async (id) => {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if(loadingOverlay) loadingOverlay.style.display = 'flex';
+    
+    try {
+        const response = await fetch('/start_seminar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id: id })
+        });
+        const data = await response.json();
+        if (data.audio_url) {
+            const playerTitle = document.getElementById('playerTitle');
+            if(playerTitle) playerTitle.innerText = data.topic_title;
+            const transcriptEl = document.getElementById('playerTranscript');
+            if (transcriptEl) transcriptEl.innerText = data.transcript_text;
+            
+            if(seminarAudio) {
+                // 字幕用テキストをデータ属性に保持
+                seminarAudio.dataset.fullText = data.transcript_text;
+                seminarAudio.src = data.audio_url;
+                seminarAudio.load();
+                navigateTo('seminarPlayer');
+                setTimeout(() => { seminarAudio.play().catch(()=>{}); }, 300);
+            }
+        }
+    } catch (error) {
+        alert('エラーが発生しました。');
+    } finally {
+        if(loadingOverlay) loadingOverlay.style.display = 'none';
+    }
+};
 
 // ========================================
 // S2ST (Live API) ロジック
@@ -360,14 +522,10 @@ async function startS2st() {
         workletNode.port.onmessage = (e) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(e.data); };
         sourceNode = micCtx.createMediaStreamSource(micStream);
         sourceNode.connect(workletNode);
-       isLiveRunning = true;
-       if(s2stBtn) {
-           s2stBtn.textContent = '会話を終了'; // 文言変更
-           s2stBtn.classList.add('stop');
-       }
-       setOrb('listening');
-       setS2stStatus('聞き取り中...', 'active')
-
+        isLiveRunning = true;
+        if(s2stBtn) { s2stBtn.textContent = '会話を終了'; s2stBtn.classList.add('stop'); }
+        setOrb('listening');
+        setS2stStatus('聞き取り中...', 'active');
     } catch(err) { stopS2st(); }
 }
 
@@ -379,10 +537,7 @@ function stopS2st() {
     if(micCtx) micCtx.close();
     if(playCtx) playCtx.close();
     if(ws) ws.close();
-    if(s2stBtn) {
-        s2stBtn.textContent = '会話を開始'; // 文言変更
-        s2stBtn.classList.remove('stop');
-    }
+    if(s2stBtn) { s2stBtn.textContent = '会話を開始'; s2stBtn.classList.remove('stop'); }
     if(voiceSelect) voiceSelect.disabled = false;
     setOrb('');
     setS2stStatus('待機中');
