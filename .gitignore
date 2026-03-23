@@ -1,0 +1,54 @@
+# --- .gitignore (最新版) ---
+
+# 仮想環境
+venv/
+env/
+.venv/
+
+# Pythonキャッシュ
+__pycache__/
+*.pyc
+
+# 生成された音声キャッシュ (Render上では消えるか、FTPから復元するので不要)
+static/audio/*
+!static/audio/.gitkeep
+
+# 音声ファイル
+*.mp3
+static/audio/*
+data/Audio/*
+
+# ★最重要: 機密情報・認証キー (絶対にアップロードしない！)
+.env
+google-credentials.json
+team-hontake*.json
+*.json
+!manifest.json
+!package.json
+
+# ★重要: データベース (ローカルの学習データは上げない)
+#*.db
+chat_history.db
+users.db
+*.sqlite3
+
+# ログファイル
+*.log
+
+# 謎のフォルダ群 (treeコマンドで見えた不要そうなもの)
+Build/
+Checking/
+Cloning/
+Installing/
+Running/
+Using/
+25.3/
+
+# システムファイル
+.DS_Store
+Thumbs.db
+
+#必要なファイル･フォルダだけをコピーする
+clean_copy.py
+
+*コピー*

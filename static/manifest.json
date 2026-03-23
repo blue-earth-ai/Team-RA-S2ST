@@ -1,0 +1,51 @@
+{
+  "name": "Team RA App テスト版",
+  "short_name": "Team RA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eff3f6",
+  "theme_color": "#2c3e50",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/images/app-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/images/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+※別途、`static`フォルダに`icon-192x192.png`と`icon-512x512.png`というアイコン画像を用意する必要があります。
+
+##### 2. `service-worker.js`の作成
+オフラインキャッシュのロジックを記述します。このファイルも`static`フォルダ内に作成します。
+
+```javascript:static/service-worker.js
+const CACHE_NAME = 'ai-leader-cache-v1';
+const urlsToCache = [
+  '/',
+  // ここにキャッシュしたい他のCSSやJSファイルを追加できます
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        return response || fetch(event.request);
+      })
+  );
+});

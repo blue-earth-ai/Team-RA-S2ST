@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>メンテナンス中 - Team RA</title>
+    <style>
+        body {
+            /* ログイン画面と同じ背景 */
+            background-image: url('/static/images/background-01.jpg');
+            background-size: cover; 
+            background-position: center;
+            height: 100vh; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+            font-family: "Hiragino Sans", sans-serif;
+            color: white;
+        }
+        .card {
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(10px);
+            padding: 40px 30px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 85%; 
+            max-width: 400px; 
+            text-align: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h2 { 
+            color: #D4AF37; 
+            margin-bottom: 20px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); 
+            font-size: 24px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        .icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        /* 管理者用隠しリンク */
+        .admin-link {
+            margin-top: 40px;
+            opacity: 0.3;
+            font-size: 12px;
+        }
+        .admin-link a {
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <span class="icon">🚧</span>
+        <h2>メンテナンス中</h2>
+        <p>
+            ただいまシステム更新作業を行っております。<br>
+            ご不便をおかけしますが、再開まで今しばらくお待ちください。
+        </p>
+    </div>
+
+    <!-- 管理者ログイン用リンク (こっそり表示) -->
+    <div class="admin-link">
+        <a href="/login?mode=admin">Admin Login</a>
+    </div>
+</body>
+</html>

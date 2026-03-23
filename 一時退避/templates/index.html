@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Team RA Test版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    
+    <!-- PWA設定 -->
+    <meta name="apple-mobile-web-app-capable" content="yes"> 
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- アイコン設定 -->
+    <link rel="icon" type="image/png" href="/static/images/app-icon.png">
+    <link rel="apple-touch-icon" href="/static/images/app-icon.png">
+    
+    <style>
+        .admin-link {
+            color: rgba(0,0,0,0.2);
+            font-size: 18px;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .admin-link:hover {
+            color: var(--accent);
+        }
+        .modal-logout-btn {
+            background-color: #e74c3c !important;
+            color: white !important;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body> 
+    <!-- ロード画面 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>AIが講義を準備しています...<br>(初回は数分かかります)</p>
+    </div>
+
+    <!-- 地球儀ローディング -->
+    <div class="earth-spinner-container" id="earthSpinner">
+        <div class="earth-spinner"></div>
+        <div class="earth-text">AI SEARCHING...</div>
+    </div>
+
+    <!-- ランチャー画面ラッパー -->
+    <div id="launcherWrapper">
+        <i class="fas fa-cog settings-button" id="settingsButton"></i>
+        
+        <!-- メイントップ画面 -->
+        <div class="pwa-container launcher-container" id="launcherScreen">
+            <h1 class="launcher-title">Team RA</h1>
+            <h2 class="launcher-subtitle">FORDAYS</h2>
+            <div class="button-grid">
+                <div class="feature-card" id="goToChatButton">
+                    <i class="fas fa-comments card-icon"></i>
+                    <p class="card-text">AIコンシェルジュ</p>
+                    <span class="card-subtext">AIメンターに質問する</span>
+                </div>
+                <div class="feature-card" id="goToSeminarButton">
+                    <i class="fas fa-chalkboard-teacher card-icon"></i>
+                    <p class="card-text">AIセミナー</p>
+                    <span class="card-subtext">テーマを選んで講義を受ける</span>
+                </div>
+                <div class="feature-card" id="goToSearchButton">
+                    <i class="fas fa-book-open card-icon"></i>
+                    <p class="card-text">資料検索</p>
+                    <span class="card-subtext">資料を直接探す</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 資料検索画面 -->
+        <div class="pwa-container" id="searchScreen">
+            <div class="search-header">
+                <button class="back-button" id="backFromSearch">← Top</button>
+                <h1 class="search-title">資料検索</h1>
+                <div style="width: 70px;"></div>
+            </div>
+            <div class="search-bar-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="キーワードでトピックを検索...">
+            </div>
+            <div class="knowledge-list-container" id="knowledgeList"></div>
+        </div>
+
+        <!-- セミナー選択画面 -->
+        <div class="pwa-container" id="seminarSelectScreen">
+            <div class="search-header">
+                <button class="back-button" id="backFromSeminarSelect">← Top</button>
+                <h1 class="search-title">セミナー選択</h1>
+                <div style="width: 70px;"></div>
+            </div>
+            
+            <div class="search-bar-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="seminarSearchInput" placeholder="キーワードでセミナーを検索...">
+            </div>
+
+            <div class="knowledge-list-container" id="seminarList"></div>
+        </div>
+
+        <!-- セミナープレイヤー画面 -->
+        <div class="pwa-container" id="seminarPlayerScreen">
+            <div class="search-header" style="justify-content: flex-start;">
+                <button class="back-button" id="backFromPlayer">← Back</button>
+            </div>
+            <div class="player-container">
+                <img src="/static/images/default_avatar.png" id="playerAvatar" class="player-avatar" alt="Avatar">
+                
+                <!-- 波形アニメーション -->
+                <div class="visualizer-container">
+                    <div class="viz-dot" style="--i:4"></div>
+                    <div class="viz-dot" style="--i:3"></div>
+                    <div class="viz-dot" style="--i:2"></div>
+                    <div class="viz-dot" style="--i:1"></div>
+                    <div class="viz-dot center" style="--i:0"></div>
+                    <div class="viz-dot" style="--i:1"></div>
+                    <div class="viz-dot" style="--i:2"></div>
+                    <div class="viz-dot" style="--i:3"></div>
+                    <div class="viz-dot" style="--i:4"></div>
+                </div>
+
+                <!-- 字幕エリア -->
+                <div class="subtitle-container">
+                    <p id="subtitleText" class="subtitle-text">...</p>
+                </div>
+
+                <div class="player-title" id="playerTitle">タイトル</div>
+                <div class="player-subtitle">AI Lecturer</div>
+                
+                <!-- プレイヤー操作パネル -->
+                <div class="seminar-player-controls">
+                    <div class="chat-audio-controls">
+                        <div class="chat-control-left">
+                            <button class="chat-control-btn" id="seminarPlayPauseBtn">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <div class="chat-time-display">
+                                <span id="seminarCurrentTime">0:00</span> / <span id="seminarDuration">0:00</span>
+                            </div>
+                        </div>
+                        <div class="chat-progress-container" id="seminarProgressContainer">
+                            <div class="chat-progress-bar">
+                                <div class="chat-progress-fill" id="seminarProgressFill"></div>
+                            </div>
+                        </div>
+                        <div class="chat-control-right">
+                            <span style="font-size: 11px; color: #fff; margin-right: 5px;">速度</span>
+                            <button class="chat-speed-btn sem-speed-btn active" data-speed="1.0">1.0x</button>
+                            <button class="chat-speed-btn sem-speed-btn" data-speed="1.25">1.25x</button>
+                            <button class="chat-speed-btn sem-speed-btn" data-speed="1.5">1.5x</button>
+                            <button class="chat-speed-btn sem-speed-btn" data-speed="2.0">2.0x</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="transcript-caption">全文表示</div>
+                <div class="transcript-box">
+                    <div class="transcript-content" id="playerTranscript">
+                        ここに講義の内容が表示されます...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 資料音声プレイヤー画面 -->
+        <div class="pwa-container" id="materialPlayerScreen">
+            <div class="search-header" style="justify-content: flex-start;">
+                <button class="back-button" id="backFromMaterialPlayer">← Back</button>
+            </div>
+            <div class="player-container">
+                <img src="/static/images/default_avatar.png" id="materialPlayerAvatar" class="player-avatar" alt="Avatar">
+                <div class="player-title" id="materialPlayerTitle">タイトル</div>
+                <div class="player-subtitle">Audio Material</div>
+                <audio id="material-audio" controls style="width: 100%; margin-top: 30px;"></audio>
+            </div>
+        </div>
+    </div> <!-- END of launcherWrapper -->
+
+    <!-- テーマ設定モーダル -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2 class="modal-title">テーマ選択</h2>
+            <div class="theme-preview-container">
+                <div class="theme-preview" id="preview-1" data-bg="01"></div>
+                <div class="theme-preview" id="preview-2" data-bg="02"></div>
+                <div class="theme-preview" id="preview-3" data-bg="03"></div>
+                <div class="theme-preview" id="preview-4" data-bg="04"></div>
+                <div class="theme-preview" id="preview-5" data-bg="05"></div>
+                <div class="theme-preview" id="preview-6" data-bg="06"></div>
+                <div class="theme-preview" id="preview-7" data-bg="07"></div>
+                <div class="theme-preview" id="preview-8" data-bg="08"></div>
+                <div class="theme-preview" id="preview-9" data-bg="09"></div>
+                <div class="theme-preview" id="preview-10" data-bg="10"></div>
+            </div>
+            <button class="modal-button" id="setLightTheme">ライトテーマに切り替え</button>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 20px 0;">
+            <button class="modal-button modal-logout-btn" id="userLogoutBtn">
+                <i class="fas fa-sign-out-alt"></i> ログアウト
+            </button>
+            <div style="text-align: right; margin-top: 15px;">
+                <a href="/admin" class="admin-link" title="System Admin">
+                    <i class="fas fa-user-shield"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- フィードバック用モーダル -->
+    <div class="modal" id="feedbackModal">
+        <div class="modal-content">
+            <h2 class="modal-title">AI回答の改善にご協力ください</h2>
+            <p class="modal-subtitle">なぜこの回答を低評価されましたか?(任意)</p>
+            <textarea id="feedbackComment" rows="4" placeholder="(例:情報が古いです、質問の意図と違いました)" style="width: 95%; padding: 10px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ccc;"></textarea>
+            <button class="modal-button" id="submitBadFeedbackButton" style="background-color: #dc3545; color: white;">コメントを送信して終了</button>
+            <button class="modal-button" id="cancelFeedbackButton" style="background-color: #6c757d; color: white;">コメントせず終了</button>
+        </div>
+    </div>
+
+    <!-- チャット画面 -->
+    <div class="pwa-container" id="chatContainer">
+        <div class="chat-inner-container">
+            <header>
+                <button class="header-back-button" id="backToLauncherButton">← Top</button>
+                <div class="title">AIビジネスメンター</div>
+                <div style="width: 70px;"></div>
+            </header>
+            <div class="chat-audio-controls-container">
+                <div class="chat-audio-controls">
+                    <div class="chat-control-left">
+                        <button class="chat-control-btn" id="chatPlayPauseBtn" disabled>
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="chat-time-display">
+                            <span id="chatCurrentTime">0:00</span> / <span id="chatDuration">0:00</span>
+                        </div>
+                    </div>
+                    <div class="chat-progress-container" id="chatProgressContainer">
+                        <div class="chat-progress-bar">
+                            <div class="chat-progress-fill" id="chatProgressFill"></div>
+                        </div>
+                    </div>
+                    <div class="chat-control-right">
+                        <span style="font-size: 11px; color: #888; margin-right: 5px;">速度</span>
+                        <button class="chat-speed-btn active" data-speed="1.0">1.0x</button>
+                        <button class="chat-speed-btn" data-speed="1.25">1.25x</button>
+                        <button class="chat-speed-btn" data-speed="1.5">1.5x</button>
+                        <button class="chat-speed-btn" data-speed="2.0">2.0x</button>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-window" id="chat-window">
+                {% for entry in history %}
+                    <div class="message {{ 'user-message' if entry.sender == 'user' else 'ai-message' }}">
+                        <div class="message-bubble">{{ entry.message | safe }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <form class="chat-form" id="chat-form">
+                <textarea id="message-input" placeholder="メッセージを入力..." rows="1"></textarea>
+                <button type="submit" id="send-button">➤</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 音声再生用要素 -->
+    <audio id="audio-player" style="display: none;"></audio>
+    <audio id="seminar-audio" style="display: none;"></audio>
+
+    <!-- オフライン警告画面 -->
+    <div id="offlineScreen" class="offline-screen">
+        <div class="offline-content">
+            <i class="fas fa-wifi offline-icon"></i>
+            <div class="offline-title">オフラインです</div>
+            <p class="offline-text">
+                インターネットに接続されていません。<br>
+                電波の良い場所で再度お試しください。
+            </p>
+            <button class="offline-retry-btn" onclick="window.location.reload()">再読み込み</button>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

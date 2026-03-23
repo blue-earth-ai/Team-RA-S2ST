@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Team RA - システム管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --header-height: 60px;
+            --mobile-nav-height: 60px;
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+        }
+
+        body, html { 
+            height: 100%; 
+            margin: 0; 
+            font-family: 'Hiragino Sans', sans-serif; 
+            background-color: #f0f2f5; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; /* 全体のスクロールを禁止 */
+        }
+        
+        /* ヘッダー */
+        header { 
+            background-color: var(--primary-color); 
+            color: white; 
+            height: var(--header-height);
+            padding: 0 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            flex-shrink: 0;
+            z-index: 100;
+        }
+        .logo { font-weight: bold; font-size: 1.1em; display: flex; align-items: center; gap: 8px; }
+        .logout-link { 
+            color: white; 
+            text-decoration: none; 
+            font-size: 0.85em; 
+            border: 1px solid rgba(255,255,255,0.5); 
+            padding: 6px 12px; 
+            border-radius: 4px; 
+            transition: background 0.2s; 
+        }
+        .logout-link:hover { background-color: rgba(255,255,255,0.2); }
+
+        /* レイアウトコンテナ */
+        .container { 
+            display: flex; 
+            flex: 1; 
+            overflow: hidden; 
+            position: relative;
+        }
+        
+        /* 左側: AIチャット */
+        .chat-section { 
+            width: 350px; 
+            background-color: white; 
+            border-right: 1px solid #ddd; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100%;
+        }
+        .chat-window { 
+            flex: 1; 
+            padding: 15px; 
+            overflow-y: auto; 
+            background-color: #ecf0f1; 
+            -webkit-overflow-scrolling: touch;
+        }
+        .chat-message { margin-bottom: 10px; padding: 10px; border-radius: 8px; max-width: 85%; font-size: 0.9em; line-height: 1.4; word-break: break-all; }
+        .ai-msg { background-color: #e2e6ea; align-self: flex-start; color: #333; }
+        .user-msg { background-color: var(--accent-color); color: white; align-self: flex-end; margin-left: auto; }
+        
+        .chat-input-area { 
+            padding: 10px; 
+            border-top: 1px solid #eee; 
+            display: flex; 
+            background: white;
+            flex-shrink: 0;
+        }
+        .chat-input { 
+            flex: 1; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            font-size: 16px; /* iOSでのズーム防止 */
+        }
+        .chat-send { 
+            margin-left: 8px; 
+            padding: 0 15px; 
+            background-color: var(--primary-color); 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 1.1em;
+        }
+
+        /* 右側: 管理パネル */
+        .admin-main { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 80px; /* モバイルナビ用余白 */
+        }
+        .panel-card { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            margin-bottom: 20px; 
+            display: none; 
+        }
+        .panel-card.active { display: block; }
+        
+        h2 { 
+            margin-top: 0; 
+            font-size: 1.1em; 
+            color: var(--primary-color); 
+            border-bottom: 2px solid var(--accent-color); 
+            padding-bottom: 10px; 
+        }
+        
+        /* テーブル (スマホ対応) */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto; /* 横スクロール許可 */
+            -webkit-overflow-scrolling: touch;
+            margin-top: 10px;
+            border: 1px solid #eee;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 500px; /* 横スクロールさせるための最小幅 */
+        }
+        th, td { 
+            padding: 12px 10px; 
+            border-bottom: 1px solid #eee; 
+            text-align: left; 
+            vertical-align: middle; 
+            white-space: nowrap; /* 折り返し防止 */
+        }
+        th { background-color: #f8f9fa; font-weight: bold; color: #555; font-size: 0.9em; }
+        
+        /* フォーム類 */
+        .input-std { 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            font-size: 16px; /* iOS対応 */
+        }
+        .input-sm { 
+            padding: 6px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            font-size: 14px;
+        }
+        
+        /* ボタン共通 */
+        .btn { border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; color: white; font-size: 0.9em; font-weight: bold; white-space: nowrap; }
+        .btn-add { background-color: #2ecc71; width: 100%; }
+        .btn-update { background-color: var(--accent-color); margin-right: 5px; padding: 6px 10px; font-size: 0.8em; }
+        .btn-del { background-color: transparent; color: #e74c3c; font-size: 1.2em; padding: 6px 10px; }
+        .btn-csv { background-color: #f39c12; flex: 1; }
+        .btn-export { background-color: #95a5a6; flex: 1; }
+
+        /* フォーム行 (スマホ対応) */
+        .form-row { 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+            background: #f9f9f9; 
+            padding: 15px; 
+            border-radius: 8px; 
+        }
+
+        /* ポップアップ */
+        .toast-popup { 
+            position: fixed; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            background-color: rgba(0, 0, 0, 0.85); 
+            color: white; 
+            padding: 15px 30px; 
+            border-radius: 30px; 
+            z-index: 9999; 
+            font-size: 14px; 
+            display: none; 
+            pointer-events: none; 
+            white-space: nowrap;
+        }
+
+        /* --- モバイル用ナビゲーション (デフォルト非表示) --- */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--mobile-nav-height);
+            background: white;
+            border-top: 1px solid #ddd;
+            z-index: 200;
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #888;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--accent-color); background-color: #f8fbff; }
+
+        /* --- レスポンシブ対応 (スマホ向け) --- */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            
+            /* チャットと管理画面を切り替えて表示 */
+            .chat-section { 
+                width: 100%; 
+                flex: 1; 
+                display: none; /* 初期状態は非表示(JSで制御) */
+            }
+            .admin-main { 
+                width: 100%; 
+                flex: 1; 
+                display: none; /* 初期状態は非表示(JSで制御) */
+                padding: 15px;
+                padding-bottom: calc(var(--mobile-nav-height) + 20px);
+            }
+
+            /* モバイルナビを表示 */
+            .mobile-nav { display: flex; }
+
+            /* 表示クラス */
+            .show-chat .chat-section { display: flex; }
+            .show-admin .admin-main { display: block; }
+
+            /* フォーム要素を縦積みに */
+            .form-row { flex-direction: column; align-items: stretch; }
+            .input-std { width: 100%; margin-bottom: 5px; }
+            
+            .btn-csv, .btn-export { width: 100%; margin-bottom: 5px; }
+            
+            /* CSVファイル選択の調整 */
+            input[type="file"] { width: 100%; margin-bottom: 10px; font-size: 0.9em; }
+
+            /* ロゴ簡略化 */
+            .logo span { display: none; }
+            .logo:after { content: 'Admin AI'; }
+        }
+    </style>
+</head>
+<body class="show-chat"> <!-- 初期状態はチャット表示 -->
+    
+    <header>
+        <div class="logo"><i class="fas fa-robot"></i> <span>System Admin AI</span></div>
+        <a href="/" class="logout-link">アプリへ戻る</a>
+    </header>
+
+    <div id="toastPopup" class="toast-popup">処理中...</div>
+
+    <div class="container">
+        <!-- 左側: チャット -->
+        <div class="chat-section">
+            <div class="chat-window" id="chatWindow">
+                <div class="chat-message ai-msg">管理者AIです。<br>下のメニューで画面を切り替えられます。</div>
+            </div>
+            <form class="chat-input-area" id="chatForm">
+                <input type="text" class="chat-input" id="chatInput" placeholder="AIに指示..." required autocomplete="off">
+                <button type="submit" class="chat-send"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+
+        <!-- 右側: メインパネル -->
+        <div class="admin-main">
+            <!-- ユーザー管理パネル -->
+            <div class="panel-card active" id="userPanel">
+                <h2><i class="fas fa-users"></i> ユーザーアカウント管理</h2>
+                
+                <!-- 新規追加フォーム -->
+                <div class="form-row">
+                    <input type="text" id="newUsername" class="input-std" placeholder="ユーザーID (必須)">
+                    <input type="text" id="newPassword" class="input-std" placeholder="パスワード (必須)">
+                    <input type="text" id="newInfo" class="input-std" placeholder="名前/備考 (任意)">
+                    <button class="btn btn-add" onclick="addUser()">新規追加</button>
+                </div>
+
+                <!-- CSV操作 -->
+                <div class="form-row" style="background: #fff; border: 1px dashed #ccc;">
+                    <div style="width:100%; margin-bottom:5px; font-weight:bold; font-size:0.9em; color:#555;">CSV一括操作</div>
+                    <input type="file" id="csvFile" accept=".csv">
+                    <div style="display:flex; gap:5px; width:100%;">
+                        <button class="btn btn-csv" onclick="uploadCsv()">インポート</button>
+                        <button class="btn btn-export" onclick="downloadCsv()"><i class="fas fa-download"></i> DL</button>
+                    </div>
+                </div>
+
+                <!-- ユーザー一覧テーブル -->
+                <div class="table-responsive">
+                    <table id="userTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>情報 (編集)</th>
+                                <th>パスワード変更</th>
+                                <th>登録日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- モバイル用ナビゲーション -->
+    <div class="mobile-nav">
+        <div class="nav-item active" id="navChat" onclick="switchTab('chat')">
+            <i class="fas fa-comments"></i>
+            <span>AIチャット</span>
+        </div>
+        <div class="nav-item" id="navAdmin" onclick="switchTab('admin')">
+            <i class="fas fa-cogs"></i>
+            <span>管理パネル</span>
+        </div>
+    </div>
+
+    <script>
+        // --- タブ切り替えロジック (スマホ用) ---
+        function switchTab(tab) {
+            const body = document.body;
+            const navChat = document.getElementById('navChat');
+            const navAdmin = document.getElementById('navAdmin');
+
+            if (tab === 'chat') {
+                body.classList.remove('show-admin');
+                body.classList.add('show-chat');
+                navChat.classList.add('active');
+                navAdmin.classList.remove('active');
+            } else {
+                body.classList.remove('show-chat');
+                body.classList.add('show-admin');
+                navAdmin.classList.add('active');
+                navChat.classList.remove('active');
+                // 管理パネルを表示したタイミングでリスト更新
+                loadUsers(); 
+            }
+        }
+
+        // ポップアップ表示
+        function showPopup(msg) {
+            const p = document.getElementById('toastPopup');
+            p.innerText = msg;
+            p.style.display = 'block';
+            setTimeout(() => { p.style.display = 'none'; }, 2000);
+        }
+
+        // チャット機能
+        document.getElementById('chatForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const msg = input.value;
+            if(!msg) return;
+            
+            // 画面に表示
+            const win = document.getElementById('chatWindow');
+            win.innerHTML += `<div class="chat-message user-msg">${msg}</div>`;
+            input.value = '';
+            win.scrollTop = win.scrollHeight;
+            
+            // 入力欄にフォーカスを戻す
+            input.focus();
+
+            try {
+                const res = await fetch('/admin/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await res.json();
+                win.innerHTML += `<div class="chat-message ai-msg">${data.response}</div>`;
+                win.scrollTop = win.scrollHeight;
+                
+                // コマンド実行後のアクション
+                if(data.action === 'SHOW_USER_PANEL') {
+                    switchTab('admin'); // 自動でタブ切り替え
+                    loadUsers();
+                }
+            } catch(e) {
+                win.innerHTML += `<div class="chat-message ai-msg">エラーが発生しました</div>`;
+            }
+        });
+
+        // ユーザー一覧読み込み
+        async function loadUsers() {
+            try {
+                const res = await fetch('/admin/users');
+                const users = await res.json();
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+                
+                users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight:bold;">${u.username}</td>
+                        <td><input type="text" id="info_${u.username}" class="input-sm" value="${u.info || ''}"></td>
+                        <td><input type="text" id="pass_${u.username}" class="input-sm" placeholder="変更時のみ"></td>
+                        <td style="font-size:0.8em; color:#888;">${u.created_at.split(' ')[0]}</td>
+                        <td>
+                            <button class="btn btn-update" onclick="updateUser('${u.username}')">更新</button>
+                            <button class="btn btn-del" onclick="deleteUser('${u.username}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch(e) {
+                console.error("User load error", e);
+            }
+        }
+
+        // ユーザー追加
+        async function addUser() {
+            const u = document.getElementById('newUsername').value;
+            const p = document.getElementById('newPassword').value;
+            const i = document.getElementById('newInfo').value;
+            if(!u || !p) return alert('IDとパスワードは必須です');
+
+            showPopup('追加中...');
+            const res = await fetch('/admin/users/add', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: u, password: p, info: i })
+            });
+            const data = await res.json();
+            
+            if(data.status === 'success') {
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('newInfo').value = '';
+                loadUsers();
+                showPopup(data.message);
+            } else {
+                alert(data.message);
+            }
+        }
+
+        // ユーザー更新
+        async function updateUser(username) {
+            const info = document.getElementById('info_' + username).value;
+            const pass = document.getElementById('pass_' + username).value;
+            
+            showPopup('更新中...');
+            const res = await fetch('/admin/users/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: username, password: pass, info: info })
+            });
+            const data = await res.json();
+            
+            if(data.status === 'success') {
+                if(pass) document.getElementById('pass_' + username).value = ''; 
+                showPopup('更新しました');
+            } else {
+                alert(data.message);
+            }
+        }
+
+        // ユーザー削除
+        async function deleteUser(username) {
+            if(!confirm(`${username} を削除しますか？`)) return;
+            
+            showPopup('削除中...');
+            const res = await fetch('/admin/users/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: username })
+            });
+            loadUsers();
+        }
+
+        // CSVインポート
+        async function uploadCsv() {
+            const fileInput = document.getElementById('csvFile');
+            if(!fileInput.files.length) return alert('ファイルを選択してください');
+
+            showPopup('CSVインポート中...');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch('/admin/users/upload_csv', { method: 'POST', body: formData });
+                const data = await res.json();
+                alert(data.message);
+                loadUsers();
+                fileInput.value = '';
+            } catch(e) {
+                alert('インポートエラー');
+            }
+        }
+
+        // CSVエクスポート
+        async function downloadCsv() {
+            showPopup('CSV生成中...');
+            try {
+                const res = await fetch('/admin/users/export_csv');
+                if(!res.ok) throw new Error('Export failed');
+                
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'users_export.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch(e) {
+                alert('エクスポートに失敗しました');
+            }
+        }
+
+        // 初期読み込み
+        window.onload = function() {
+            if(window.innerWidth > 768) {
+                // PCの場合は両方表示されるためロードする
+                loadUsers();
+            }
+        };
+    </script>
+</body>
+</html>

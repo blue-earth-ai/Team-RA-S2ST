@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Team RA - ログイン</title>
+    <style>
+        body {
+            background-image: url('/static/images/background-01.jpg');
+            background-size: cover; background-position: center;
+            height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center;
+            font-family: sans-serif;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px);
+            padding: 40px 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+            width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h2 { color: #D4AF37; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        input {
+            width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: none;
+            background: rgba(255, 255, 255, 0.9); font-size: 16px; box-sizing: border-box;
+        }
+        button {
+            width: 100%; padding: 15px; background: #D4AF37; color: white; border: none;
+            border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer;
+        }
+        .error { color: #ff6b6b; font-size: 14px; margin-bottom: 10px; display: none; text-shadow: 1px 1px 2px black; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Team RA</h2>
+        <div id="error" class="error"></div>
+        <input type="text" id="u" placeholder="ユーザーID">
+        <input type="password" id="p" placeholder="パスワード">
+        <button onclick="login()">ログイン</button>
+    </div>
+    <script>
+        async function login() {
+            const errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'none';
+            
+            const u = document.getElementById('u').value;
+            const p = document.getElementById('p').value;
+            
+            if(!u || !p) {
+                errorDiv.innerText = "IDとパスワードを入力してください";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: u, password: p})
+                });
+                const data = await res.json();
+                
+                if(data.status === 'success') {
+                    location.href = '/';
+                } else { 
+                    errorDiv.innerText = data.message; 
+                    errorDiv.style.display = 'block'; 
+                }
+            } catch(e) {
+                errorDiv.innerText = "通信エラーが発生しました";
+                errorDiv.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
