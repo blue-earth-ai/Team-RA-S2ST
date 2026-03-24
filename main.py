@@ -57,7 +57,7 @@ async def summarize_history(client, history: list[dict]) -> str:
     try:
         # 要約には通常の generate_content を使用
         resp = await client.aio.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=prompt
         )
         return resp.text.strip()
